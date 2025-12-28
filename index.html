@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimSimi Tagalog AI Chatbot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 900px;
+            height: 85vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chat-header img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid white;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .chat-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            animation: fadeIn 0.3s ease;
+            word-wrap: break-word;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .bot-message .bot-name {
+            font-weight: bold;
+            color: #7c3aed;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            background: white;
+            padding: 12px 18px;
+            border-radius: 18px;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #7c3aed;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 50px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #7c3aed;
+        }
+
+        .send-btn {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(124, 58, 237, 0.4);
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .teach-mode {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            display: none;
+        }
+
+        .teach-mode.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .teach-info {
+            text-align: center;
+            padding: 10px;
+            background: #fef3c7;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #92400e;
+        }
+
+        .teach-inputs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .teach-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #f59e0b;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .teach-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .teach-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .teach-submit {
+            background: linear-gradient(to right, #10b981, #059669);
+            color: white;
+        }
+
+        .teach-cancel {
+            background: #ef4444;
+            color: white;
+        }
+
+        .teach-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .mode-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .mode-btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
+            color: white;
+            box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            padding: 0 20px;
+        }
+
+        .example-btn {
+            padding: 8px 15px;
+            background: #e5e7eb;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .example-btn:hover {
+            background: #d1d5db;
+            transform: translateY(-2px);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 90vh;
+                border-radius: 15px;
+            }
+            
+            .chat-header {
+                padding: 15px;
+            }
+            
+            .chat-header h1 {
+                font-size: 20px;
+            }
+            
+            .message {
+                max-width: 85%;
+            }
+            
+            .teach-inputs {
+                flex-direction: column;
+            }
+            
+            .mode-toggle {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .mode-btn {
+                width: 100%;
+            }
+        }
+
+        /* Scrollbar styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #c7d2fe;
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #a5b4fc;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <img src="https://api.dicebear.com/7.x/bottts/svg?seed=simsimi" alt="SimSimi Avatar">
+            <div>
+                <h1>SimSimi Tagalog AI</h1>
+                <p>Chat with your Filipino AI friend</p>
+            </div>
+        </div>
+
+        <!-- Mode Toggle -->
+        <div class="mode-toggle">
+            <button class="mode-btn active" id="chatModeBtn">
+                <i class="fas fa-comments"></i> Chat Mode
+            </button>
+            <button class="mode-btn" id="teachModeBtn">
+                <i class="fas fa-graduation-cap"></i> Teach Mode
+            </button>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                <p>👋 Kamusta! Ako si SimSimi, your Filipino AI friend!</p>
+                <p>You can chat with me or teach me new responses.</p>
+                
+                <div class="examples">
+                    <button class="example-btn" onclick="sendExample('hi')">Say "hi"</button>
+                    <button class="example-btn" onclick="sendExample('musta')">Ask "musta"</button>
+                    <button class="example-btn" onclick="sendExample('sino ka')">Ask "sino ka"</button>
+                    <button class="example-btn" onclick="sendExample('jeje')">Say "jeje"</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teach Mode Input -->
+        <div class="teach-mode" id="teachMode">
+            <div class="teach-info">
+                <i class="fas fa-info-circle"></i> Teach SimSimi a new response
+            </div>
+            <div class="teach-inputs">
+                <input type="text" class="teach-input" id="teachQuestion" placeholder="Question (e.g., kamusta)">
+                <input type="text" class="teach-input" id="teachAnswer" placeholder="Answer (e.g., okay lang)">
+            </div>
+            <div class="teach-buttons">
+                <button class="teach-btn teach-submit" id="teachSubmit">
+                    <i class="fas fa-save"></i> Teach SimSimi
+                </button>
+                <button class="teach-btn teach-cancel" id="teachCancel">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="typingIndicator">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message here... (Start with 'sim ' or use buttons above)">
+            <button class="send-btn" id="sendBtn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_URL = 'https://simsimi-api-ph.onrender.com/';
+        
+        // DOM Elements
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const chatModeBtn = document.getElementById('chatModeBtn');
+        const teachModeBtn = document.getElementById('teachModeBtn');
+        const teachMode = document.getElementById('teachMode');
+        const teachQuestion = document.getElementById('teachQuestion');
+        const teachAnswer = document.getElementById('teachAnswer');
+        const teachSubmit = document.getElementById('teachSubmit');
+        const teachCancel = document.getElementById('teachCancel');
+
+        // State
+        let isTeachingMode = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load chat history from localStorage
+            loadChatHistory();
+            
+            // Set focus to input
+            chatInput.focus();
+        });
+
+        // Event Listeners
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Mode Toggle
+        chatModeBtn.addEventListener('click', () => {
+            setMode(false);
+            chatInput.focus();
+        });
+
+        teachModeBtn.addEventListener('click', () => {
+            setMode(true);
+            teachQuestion.focus();
+        });
+
+        // Teach Mode Events
+        teachSubmit.addEventListener('click', teachSimSimi);
+        teachCancel.addEventListener('click', () => {
+            setMode(false);
+            chatInput.focus();
+        });
+
+        // Teach mode enter key support
+        teachQuestion.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                teachAnswer.focus();
+            }
+        });
+
+        teachAnswer.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                teachSimSimi();
+            }
+        });
+
+        // Functions
+        function setMode(teaching) {
+            isTeachingMode = teaching;
+            
+            // Update UI
+            if (teaching) {
+                chatModeBtn.classList.remove('active');
+                teachModeBtn.classList.add('active');
+                teachMode.classList.add('active');
+                chatInput.placeholder = "Switch to Chat Mode using the button above";
+            } else {
+                chatModeBtn.classList.add('active');
+                teachModeBtn.classList.remove('active');
+                teachMode.classList.remove('active');
+                chatInput.placeholder = "Type your message here... (Start with 'sim ' or use example buttons)";
+                
+                // Clear teach inputs
+                teachQuestion.value = '';
+                teachAnswer.value = '';
+            }
+        }
+
+        function sendExample(exampleText) {
+            chatInput.value = `sim ${exampleText}`;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessage(message, 'user');
+            
+            // Clear input
+            chatInput.value = '';
+            
+            // Show typing indicator
+            showTyping(true);
+            
+            try {
+                // Send to API
+                const response = await fetch(`${API_URL}?query=${encodeURIComponent(message)}`);
+                const data = await response.json();
+                
+                // Hide typing indicator
+                showTyping(false);
+                
+                // Add bot response to chat
+                if (data.status === 'success') {
+                    addMessage(data.message, 'bot');
+                } else if (data.status === 'error') {
+                    addMessage(`❌ ${data.message}`, 'bot');
+                } else {
+                    addMessage(data.message, 'bot');
+                }
+                
+                // Save to chat history
+                saveChatHistory();
+                
+            } catch (error) {
+                showTyping(false);
+                addMessage('❌ Error connecting to SimSimi API. Please try again.', 'bot');
+                console.error('API Error:', error);
+            }
+            
+            // Scroll to bottom
+            scrollToBottom();
+        }
+
+        async function teachSimSimi() {
+            const question = teachQuestion.value.trim();
+            const answer = teachAnswer.value.trim();
+            
+            if (!question || !answer) {
+                alert('Please enter both a question and an answer');
+                return;
+            }
+            
+            const teachQuery = `sim teach ${question} | ${answer}`;
+            
+            // Add user message to chat
+            addMessage(`Teaching: "${question}" -> "${answer}"`, 'user');
+            
+            // Show typing indicator
+            showTyping(true);
+            
+            try {
+                // Send to API
+                const response = await fetch(`${API_URL}?query=${encodeURIComponent(teachQuery)}`);
+                const data = await response.json();
+                
+                // Hide typing indicator
+                showTyping(false);
+                
+                // Add bot response to chat
+                if (data.status === 'success') {
+                    addMessage(`✅ ${data.message}`, 'bot');
+                } else if (data.status === 'info') {
+                    addMessage(`ℹ️ ${data.message}`, 'bot');
+                } else {
+                    addMessage(`❌ ${data.message}`, 'bot');
+                }
+                
+                // Clear inputs
+                teachQuestion.value = '';
+                teachAnswer.value = '';
+                
+                // Switch back to chat mode
+                setMode(false);
+                
+                // Save to chat history
+                saveChatHistory();
+                
+            } catch (error) {
+                showTyping(false);
+                addMessage('❌ Error connecting to SimSimi API. Please try again.', 'bot');
+                console.error('API Error:', error);
+            }
+            
+            // Scroll to bottom
+            scrollToBottom();
+        }
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            if (sender === 'bot') {
+                messageDiv.innerHTML = `
+                    <div class="bot-name">SimSimi</div>
+                    ${text}
+                `;
+            } else {
+                messageDiv.textContent = text;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            
+            // Remove welcome message if it exists
+            const welcomeMsg = chatMessages.querySelector('.welcome-message');
+            if (welcomeMsg && chatMessages.children.length > 2) {
+                welcomeMsg.remove();
+            }
+        }
+
+        function showTyping(show) {
+            typingIndicator.style.display = show ? 'flex' : 'none';
+            if (show) scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 100);
+        }
+
+        // Chat History Functions
+        function saveChatHistory() {
+            const messages = [];
+            const messageElements = chatMessages.querySelectorAll('.message');
+            
+            messageElements.forEach(msg => {
+                const isBot = msg.classList.contains('bot-message');
+                let text = msg.textContent;
+                
+                // Remove "SimSimi" from bot messages
+                if (isBot) {
+                    text = text.replace('SimSimi', '').trim();
+                }
+                
+                messages.push({
+                    text: text,
+                    sender: isBot ? 'bot' : 'user',
+                    timestamp: new Date().toISOString()
+                });
+            });
+            
+            localStorage.setItem('simsimi_chat_history', JSON.stringify(messages));
+        }
+
+        function loadChatHistory() {
+            const history = localStorage.getItem('simsimi_chat_history');
+            
+            if (history) {
+                const messages = JSON.parse(history);
+                
+                // Clear current messages except welcome
+                const welcomeMsg = chatMessages.querySelector('.welcome-message');
+                chatMessages.innerHTML = '';
+                if (welcomeMsg) {
+                    chatMessages.appendChild(welcomeMsg);
+                }
+                
+                // Add history messages
+                messages.forEach(msg => {
+                    addMessage(msg.text, msg.sender);
+                });
+                
+                // Scroll to bottom
+                scrollToBottom();
+            }
+        }
+
+        // Clear chat history function (can be called from browser console)
+        window.clearChatHistory = function() {
+            if (confirm('Clear all chat history?')) {
+                localStorage.removeItem('simsimi_chat_history');
+                location.reload();
+            }
+        };
+    </script>
+</body>
+</html>
